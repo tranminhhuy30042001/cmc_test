@@ -1,53 +1,33 @@
 class AuthController < ApplicationController
   skip_before_action :authorize_request, only: [:signup, :login]
 
-  INVALID_CREDENTIALS = 'Invalid credentials'.freeze
-  INVALID_REFRESH_TOKEN = 'Invalid refresh token'.freeze
-
   def signup
-    user = User.new(user_params)
-  
-    if user.save
-      access_token = JsonWebToken.encode(user_id: user.id)
-      refresh_token = SecureRandom.hex(32)
-      user.update(refresh_token: refresh_token)
-  
-      render json: {
-        token: access_token,
-        refresh_token: refresh_token,
-        user: user.as_json(only: [:id, :email, :role])
-      }, status: :created
+    result = AuthService.signup(user_params)
+
+    if result[:success]
+      render json: result[:data], status: :created
     else
-      render_error(user.errors.full_messages, :unprocessable_entity)
+      render_error(result[:error], :unprocessable_entity)
     end
   end
 
   def login
-    user = User.find_by(email: user_params[:email])
-  
-    if user&.authenticate(user_params[:password])
-      access_token = JsonWebToken.encode(user_id: user.id)
-      refresh_token = SecureRandom.hex(32)
-      user.update(refresh_token: refresh_token)
-  
-      render json: {
-        token: access_token,
-        refresh_token: refresh_token,
-        user: user.as_json(only: [:id, :email, :role])
-      }, status: :ok
+    result = AuthService.login(user_params)
+
+    if result[:success]
+      render json: result[:data], status: :ok
     else
-      render_error(INVALID_CREDENTIALS, :unauthorized)
+      render_error(result[:error], :unauthorized)
     end
   end
 
   def refresh
-    user = User.find_by(refresh_token: params[:refresh_token])
-  
-    if user
-      new_token = JsonWebToken.encode(user_id: user.id)
-      render json: { token: new_token }, status: :ok
+    result = AuthService.refresh(params[:refresh_token])
+
+    if result[:success]
+      render json: result[:data], status: :ok
     else
-      render_error(INVALID_REFRESH_TOKEN, :unauthorized)
+      render_error(result[:error], :unauthorized)
     end
   end
 

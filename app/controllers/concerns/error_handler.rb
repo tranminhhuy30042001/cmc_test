@@ -8,11 +8,6 @@ module ErrorHandler
     rescue_from OrderDownloadService::OrderNotFoundError, with: :handle_not_found
   end
 
-
-
-
-
-  
   private
 
   def handle_not_found(e)
