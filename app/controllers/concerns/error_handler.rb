@@ -6,6 +6,7 @@ module ErrorHandler
     rescue_from ActiveRecord::RecordInvalid, with: :handle_unprocessable_entity
     rescue_from StandardError, with: :handle_internal_error
     rescue_from OrderDownloadService::OrderNotFoundError, with: :handle_not_found
+    rescue_from ActionController::ParameterMissing, with: :handle_bad_request
   end
 
   private
@@ -32,5 +33,9 @@ module ErrorHandler
 
   def render_error(message, status)
     render json: { error: message }, status: status
+  end
+
+  def handle_bad_request(exception)
+    render_error(exception.message, :bad_request) 
   end
 end

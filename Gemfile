@@ -38,6 +38,7 @@ gem "thruster", require: false
 gem 'dotenv-rails'
 gem 'bcrypt'
 gem 'jwt'
+
 gem 'rack-cors'
 
 gem 'pry'
